@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laica Freo - Portfolio</title>
+    <style>
+        /* --- BRAND COLOR PALETTE (Matches Main Site) --- */
+        :root {
+            --bg-app: #EEF0F2;
+            --bg-card: #FFFFFF;
+            --accent: #555C64;
+            --accent-hover: #41464E;
+            --danger: #C84B4B;
+            --text-main: #282C32;
+            --text-muted: #82878E;
+            --border-color: #D7DCE1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-app) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* --- NAVIGATION --- */
+        header {
+            width: 100%;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--text-main);
+            border: 2px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* --- PAGE LAYOUT & SPACING --- */
+        section {
+            padding: 120px 10% 60px 10%;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .section-header {
+            margin-bottom: 40px;
+        }
+
+        .section-header h2 {
+            font-size: 32px;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+
+        /* --- PROFILE HERO SECTION --- */
+        .profile-hero {
+            display: flex;
+            align-items: center;
+            gap: 60px;
+            padding-top: 160px;
+            min-height: 70vh;
+        }
+
+        .profile-avatar {
+            width: 250px;
+            height: 250px;
+            background: #D7DCE1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            color: white;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        .profile-info h1 {
+            font-size: 48px;
+            margin-bottom: 5px;
+            color: var(--text-main);
+        }
+
+        .profile-info h3 {
+            font-size: 20px;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+        }
+
+        .quick-facts {
+            margin-bottom: 25px;
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: inline-block;
+        }
+
+        .quick-facts p {
+            font-size: 16px;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+        
+        .quick-facts p:last-child {
+            margin-bottom: 0;
+        }
+
+        .quick-facts strong {
+            color: var(--accent);
+            width: 80px;
+            display: inline-block;
+        }
+
+        .profile-info p.bio {
+            font-size: 18px;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 30px;
+            max-width: 600px;
+        }
+
+        /* --- SKILLS SECTION --- */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+
+        .skill-tag {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--text-main);
+            transition: transform 0.2s ease;
+        }
+
+        .skill-tag:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+        }
+
+        /* --- EXPERIENCE / PROJECTS SECTION --- */
+        .project-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 40px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        }
+
+        .project-card h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .project-card span {
+            display: inline-block;
+            background: var(--bg-app);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--accent);
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .project-card p {
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* --- ANIMATIONS --- */
+        .hidden {
+            opacity: 0;
+            transform: translateY(30px) scale(0.98);
+            transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .delay-1 { transition-delay: 100ms; }
+        .delay-2 { transition-delay: 200ms; }
+        .delay-3 { transition-delay: 300ms; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">Laica Freo</div>
+        <a href="index.html" class="btn-outline">← Back to Main Site</a>
+    </header>
+
+    <section class="profile-hero">
+        <div class="profile-avatar hidden show">
+            💻
+        </div>
+        
+        <div class="profile-info hidden show delay-1">
+            <h1>Laica Freo</h1>
+            <h3>Programmer</h3>
+            
+            <div class="quick-facts">
+                <p><strong>Age:</strong> 18</p>
+                <p><strong>Course:</strong> BS Information Technology</p>
+                <p><strong>Email:</strong> lagu.freo.up@phinmaed.com</p>
+            </div>
+
+            <p class="bio">
+                Hello! I am a student developer working on the SmartKKB project. 
+                I enjoy learning Java and improving my skills in building functional systems.
+            </p>
+        </div>
+    </section>
+
+    <section id="skills">
+        <div class="section-header hidden">
+            <h2>My Skills & Contributions</h2>
+        </div>
+        <div class="skills-grid">
+            <div class="skill-tag hidden delay-1">Java Programming</div>
+            <div class="skill-tag hidden delay-2">UI/UX Design</div>
+            <div class="skill-tag hidden delay-3">Problem Solving</div>
+            <div class="skill-tag hidden delay-1">Data Analysis</div>
+        </div>
+    </section>
+
+    <section id="experience">
+        <div class="section-header hidden">
+            <h2>Experience & Projects</h2>
+        </div>
+
+        <div class="project-card hidden delay-1">
+            <h3>SmartKKB Application</h3>
+            <span>Academic Project • 2026</span>
+            <p>Served as a Programmer for a desktop expense-splitting application. Responsible for writing the core backend logic, ensuring data structures correctly handled group members and calculated accurate expense splits.</p>
+        </div>
+
+        <div class="project-card hidden delay-2">
+            <h3>Project Title: UPANG ROOM MONITORING </h3>
+            <span>Year Completed: 2025</span>
+            <p>This project is a Java-based system used to store and manage student information. I helped design the interface and worked on the code for adding and retrieving student data.</p>
+        </div>
+    </section>
+
+    <script>
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.15 
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('show');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        const hiddenElements = document.querySelectorAll('.hidden');
+        hiddenElements.forEach((el) => observer.observe(el));
+    </script>
+</body>
+</html>
