@@ -15,7 +15,7 @@ public class SmartKKB extends JFrame {
     // --- DATABASE ---
     private static final Map<String, ExpenseGroup> database = new HashMap<>();
     private static final Map<String, ExpenseGroup> deletedDatabase = new HashMap<>(); // For deleted groups
-
+    
     // File where the data will be saved
     private static final String DATA_FILE = "smartkkb_data.dat";
 
@@ -94,13 +94,13 @@ public class SmartKKB extends JFrame {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                 Map<String, ExpenseGroup> loadedDb = (Map<String, ExpenseGroup>) ois.readObject();
                 Map<String, ExpenseGroup> loadedDeletedDb = (Map<String, ExpenseGroup>) ois.readObject();
-
+                
                 database.clear();
                 database.putAll(loadedDb);
-
+                
                 deletedDatabase.clear();
                 deletedDatabase.putAll(loadedDeletedDb);
-
+                
                 System.out.println("Data loaded successfully.");
             } catch (Exception e) {
                 System.err.println("Error loading data: " + e.getMessage());
@@ -144,7 +144,7 @@ public class SmartKKB extends JFrame {
         searchBar.setPreferredSize(new Dimension(250, 40));
 
         searchBar.getDocument().addDocumentListener(new DocumentListener() {
-            private String lastQuery = "";
+            private String lastQuery = ""; 
 
             public void insertUpdate(DocumentEvent e) { doSearch(); }
             public void removeUpdate(DocumentEvent e) { doSearch(); }
@@ -207,7 +207,7 @@ public class SmartKKB extends JFrame {
         centerPanel.add(headerPanel, BorderLayout.NORTH);
         centerPanel.add(scrollPane, BorderLayout.CENTER);
 
-        // Bottom Actions (Create / Join)
+        // Bottom Actions
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
         bottomPanel.setOpaque(false);
         bottomPanel.setBorder(new EmptyBorder(10, 30, 30, 30));
@@ -297,7 +297,7 @@ public class SmartKKB extends JFrame {
         ExpenseGroup newGroup = new ExpenseGroup(code, category, name.trim());
         database.put(code, newGroup);
 
-        searchBar.resetPlaceholder();
+        searchBar.resetPlaceholder(); 
         refreshHome("");
         currentGroup = newGroup;
         refreshGroupScreen();
@@ -614,6 +614,8 @@ public class SmartKKB extends JFrame {
         splitBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
 
         addExpBtn.addActionListener(e -> addExpense());
+        
+        // --- NEW SPLIT LOGIC TRIGGER ---
         splitBtn.addActionListener(e -> calculateSplit());
 
         bottomPanel.add(addExpBtn);
@@ -783,17 +785,37 @@ public class SmartKKB extends JFrame {
         }
     }
 
+    // --- UPGRADED SPLIT LOGIC ---
     private void calculateSplit() {
         if (currentGroup == null || currentGroup.members.isEmpty() || currentGroup.expenses.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Ensure you have both members and expenses added.");
             return;
         }
+
+        Object[] options = {"Split Equally", "Split by Percentage", "Cancel"};
+        int choice = JOptionPane.showOptionDialog(this,
+                "How would you like to split the total bill of ₱" + String.format("%,.2f", currentGroup.getTotalExpenses()) + "?",
+                "Choose Split Method",
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]);
+
+        if (choice == 0) {
+            calculateEqualSplit();
+        } else if (choice == 1) {
+            openPercentageSplitDialog();
+        }
+    }
+
+    private void calculateEqualSplit() {
         int membersCount = currentGroup.members.size();
         double total = currentGroup.getTotalExpenses();
         double share = total / membersCount;
 
         StringBuilder sb = new StringBuilder();
-        sb.append("=== SPLIT BILL SUMMARY ===\n\n");
+        sb.append("=== EQUAL SPLIT SUMMARY ===\n\n");
         sb.append("Total Expense : ₱").append(String.format("%,.2f", total)).append("\n");
         sb.append("Total Members : ").append(membersCount).append("\n");
         sb.append("--------------------------------------\n");
@@ -805,7 +827,129 @@ public class SmartKKB extends JFrame {
             sb.append(" • ").append(member).append(" owes ₱").append(String.format("%,.2f", share)).append("\n");
         }
 
-        showCustomDialog("Split Calculation", sb.toString());
+        showCustomDialog("Equal Split Calculation", sb.toString());
+    }
+
+    private void openPercentageSplitDialog() {
+        JDialog dialog = new JDialog(this, "Split by Percentage", true);
+        dialog.setSize(400, 500);
+        dialog.setLocationRelativeTo(this);
+        dialog.getContentPane().setBackground(BG_APP);
+
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setOpaque(false);
+        content.setBorder(new EmptyBorder(20, 25, 20, 25));
+
+        JLabel title = new JLabel("Assign Percentages");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setForeground(TEXT_MAIN);
+        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel info = new JLabel("Total to split: ₱" + String.format("%,.2f", currentGroup.getTotalExpenses()));
+        info.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        info.setForeground(TEXT_MUTED);
+        info.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        content.add(title);
+        content.add(Box.createVerticalStrut(5));
+        content.add(info);
+        content.add(Box.createVerticalStrut(25));
+
+        Map<String, JTextField> inputFields = new HashMap<>();
+
+        for (String member : currentGroup.members) {
+            JPanel row = new JPanel(new BorderLayout());
+            row.setOpaque(false);
+            row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+
+            JLabel nameLbl = new JLabel(member);
+            nameLbl.setFont(new Font("Segoe UI", Font.BOLD, 15));
+            nameLbl.setForeground(TEXT_MAIN);
+
+            JTextField pctField = new JTextField("0");
+            pctField.setPreferredSize(new Dimension(70, 35));
+            pctField.setHorizontalAlignment(JTextField.CENTER);
+            pctField.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+
+            JLabel pctSymbol = new JLabel(" % ");
+            pctSymbol.setFont(new Font("Segoe UI", Font.BOLD, 15));
+
+            JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+            rightPanel.setOpaque(false);
+            rightPanel.add(pctField);
+            rightPanel.add(pctSymbol);
+
+            row.add(nameLbl, BorderLayout.WEST);
+            row.add(rightPanel, BorderLayout.EAST);
+
+            content.add(row);
+            content.add(Box.createVerticalStrut(10));
+            inputFields.put(member, pctField);
+        }
+
+        ModernButton calcBtn = new ModernButton("Calculate Split", ACCENT, Color.WHITE, ACCENT);
+        calcBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        calcBtn.setMaximumSize(new Dimension(200, 45));
+        calcBtn.addActionListener(e -> {
+            double totalPct = 0;
+            Map<String, Double> memberShares = new HashMap<>();
+            
+            try {
+                for (String mem : currentGroup.members) {
+                    double pct = Double.parseDouble(inputFields.get(mem).getText());
+                    if(pct < 0) throw new NumberFormatException("Negative percentage");
+                    totalPct += pct;
+                    memberShares.put(mem, pct);
+                }
+
+                // Check if it adds up to 100% (allowing tiny float point differences)
+                if (Math.abs(totalPct - 100.0) > 0.01) {
+                    JOptionPane.showMessageDialog(dialog, 
+                        "Total percentage must equal exactly 100%.\nCurrent total: " + String.format("%.2f", totalPct) + "%", 
+                        "Invalid Percentages", 
+                        JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                dialog.dispose();
+                showPercentageSummary(memberShares);
+
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Please enter valid positive numbers for all percentages.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        content.add(Box.createVerticalStrut(30));
+        content.add(calcBtn);
+
+        JScrollPane scroll = new JScrollPane(content);
+        scroll.setBorder(null);
+        scroll.setOpaque(false);
+        scroll.getViewport().setOpaque(false);
+        dialog.add(scroll);
+
+        dialog.setVisible(true);
+    }
+
+    private void showPercentageSummary(Map<String, Double> memberPercentages) {
+        double total = currentGroup.getTotalExpenses();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("=== PERCENTAGE SPLIT SUMMARY ===\n\n");
+        sb.append("Total Expense : ₱").append(String.format("%,.2f", total)).append("\n");
+        sb.append("--------------------------------------\n\n");
+
+        sb.append("Amount owed based on custom percentages:\n\n");
+        
+        for (String member : currentGroup.members) {
+            double pct = memberPercentages.get(member);
+            double amountOwed = total * (pct / 100.0);
+            sb.append(" • ").append(member).append(" (").append(String.format("%.1f", pct)).append("%)\n");
+            sb.append("   Pays: ₱").append(String.format("%,.2f", amountOwed)).append("\n\n");
+        }
+
+        showCustomDialog("Percentage Split Calculation", sb.toString());
     }
 
     private void showCustomDialog(String title, String content) {
@@ -963,11 +1107,9 @@ public class SmartKKB extends JFrame {
     // ==========================================
     // DATA MODELS
     // ==========================================
-
-    // ADDED: implements Serializable so Java can save these objects to a file
     class ExpenseGroup implements Serializable {
-        private static final long serialVersionUID = 1L; // Recommended for Serializable classes
-
+        private static final long serialVersionUID = 1L; 
+        
         String code;
         String category;
         String name;
@@ -986,10 +1128,9 @@ public class SmartKKB extends JFrame {
         }
     }
 
-    // ADDED: implements Serializable
     class Expense implements Serializable {
-        private static final long serialVersionUID = 1L;
-
+        private static final long serialVersionUID = 1L; 
+        
         String description;
         double amount;
         Expense(String description, double amount) {
